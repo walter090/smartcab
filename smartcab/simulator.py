@@ -395,7 +395,7 @@ class Simulator(object):
             # Compute precise agent location here (back from the intersection some)
             agent_offset = (
                 2 * state['heading'][0] * self.agent_circle_radius + self.agent_circle_radius * state['heading'][
-                    1] * 0.5, \
+                    1] * 0.5,
                 2 * state['heading'][1] * self.agent_circle_radius - self.agent_circle_radius * state['heading'][
                     0] * 0.5)
 
