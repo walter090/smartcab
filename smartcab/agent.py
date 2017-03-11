@@ -132,9 +132,12 @@ class LearningAgent(Agent):
         return
 
 
-def run():
-    """ Driving function for running the simulation. 
-        Press ESC to close the simulation, or [SPACE] to pause the simulation. """
+def run(args):
+    """
+    Driving function for running the simulation.
+    Press ESC to close the simulation, or [SPACE] to pause the simulation.
+    """
+    print args.display
 
     ##############
     # Create the environment
@@ -142,7 +145,7 @@ def run():
     #   verbose     - set to True to display additional output from the simulation
     #   num_dummies - discrete number of dummy agents in the environment, default is 100
     #   grid_size   - discrete number of intersections (columns, rows), default is (8, 6)
-    env = Environment(verbose=False)
+    env = Environment(verbose=args.verbose, num_dummies=args.num_dummies, grid_size=args.grid_size)
 
     ##############
     # Create the driving agent
@@ -150,13 +153,13 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent, learning=False)
+    agent = env.create_agent(LearningAgent, learning=args.learning, epsilon=args.epsilon, alpha=args.alpha)
 
     ##############
     # Follow the driving agent
     # Flags:
     #   enforce_deadline - set to True to enforce a deadline metric
-    env.set_primary_agent(agent, enforce_deadline=True)
+    env.set_primary_agent(agent, enforce_deadline=args.deadline)
 
     ##############
     # Create the simulation
@@ -165,21 +168,60 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.001, display=False, log_metrics=True)
+    sim = Simulator(env, display=args.display, update_delay=args.update_delay,
+                    log_metrics=args.log_metrics, optimized=args.optimized)
 
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=10)
+    sim.run(tolerance=args.tolerance, n_test=args.n_test)
 
 
 if __name__ == '__main__':
-    # import argparse
-    #
-    # parser = argparse.ArgumentParser()
-    #
-    # parser.add_argument()
+    import argparse
 
-    run()
+    parser = argparse.ArgumentParser()
+
+    # Environment constructor flags
+    verbose_parser = parser.add_mutually_exclusive_group()
+    verbose_parser.add_argument('--verbose', dest='verbose', action='store_true')
+    verbose_parser.add_argument('--no-verbose', dest='verbose', action='store_false')
+    parser.add_argument('--num-dummies', dest='num_dummies', type=int, default=100)
+    parser.add_argument('--grid-size', dest='grid_size', type=tuple, default=(8, 6))
+
+    # create_agent() flags
+    learning_parser = parser.add_argument_group()
+    learning_parser.add_argument('--learning', dest='learning', action='store_true')
+    learning_parser.add_argument('--no-learning', dest='learning', action='store_false')
+    parser.add_argument('--epsilon', type=float, default=1)
+    parser.add_argument('--alpha', type=float, default=0.5)
+
+    # set_primary_target() flag
+    deadline_parser = parser.add_mutually_exclusive_group()
+    deadline_parser.add_argument('--deadline', dest='deadline', action='store_true')
+    deadline_parser.add_argument('--no-deadline', dest='deadline', action='store_false')
+
+    # Simulator constructor flags
+    display_parser = parser.add_mutually_exclusive_group()
+    display_parser.add_argument('--display', dest='display', action='store_true')
+    display_parser.add_argument('--no-display', dest='display', action='store_false')
+    log_parser = parser.add_mutually_exclusive_group()
+    log_parser.add_argument('--log-metrics', dest='log_metrics', action='store_true')
+    log_parser.add_argument('--no-log-metrics', dest='log_metrics', action='store_false')
+    optimized_parser = parser.add_mutually_exclusive_group()
+    optimized_parser.add_argument('--optimized', dest='optimized', action='store_true')
+    optimized_parser.add_argument('--no-optimized', dest='optimized', action='store_false')
+    parser.add_argument('--update-delay', dest='update_delay', type=float, default=2)
+
+    # Simulator run() flags
+    parser.add_argument('--tolerance', type=float, default=0.05)
+    parser.add_argument('--n-test', dest='n_test', type=int, default=0)
+
+    parser.set_defaults(verbose=False, display=True, learning=False, deadline=False)
+
+    arguments = parser.parse_args()
+    print arguments
+
+    run(arguments)
