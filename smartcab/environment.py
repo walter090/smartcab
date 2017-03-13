@@ -232,7 +232,7 @@ class Environment(object):
         location = state['location']
         heading = state['heading']
         light = 'green' if (self.intersections[location].state and heading[1] != 0) or (
-        (not self.intersections[location].state) and heading[0] != 0) else 'red'
+            (not self.intersections[location].state) and heading[0] != 0) else 'red'
 
         # Populate oncoming, left, right
         oncoming = None
@@ -240,7 +240,7 @@ class Environment(object):
         right = None
         for other_agent, other_state in self.agent_states.iteritems():
             if agent == other_agent or location != other_state['location'] or (
-                    heading[0] == other_state['heading'][0] and heading[1] == other_state['heading'][1]):
+                            heading[0] == other_state['heading'][0] and heading[1] == other_state['heading'][1]):
                 continue
             # For dummy agents, ignore the primary agent
             # This is because the primary agent is not required to follow the waypoint
@@ -250,7 +250,7 @@ class Environment(object):
             if (heading[0] * other_state['heading'][0] + heading[1] * other_state['heading'][1]) == -1:
                 if oncoming != 'left':  # we don't want to override oncoming == 'left'
                     oncoming = other_heading
-            elif (heading[1] == other_state['heading'][0] and -heading[0] == other_state['heading'][1]):
+            elif heading[1] == other_state['heading'][0] and -heading[0] == other_state['heading'][1]:
                 if right != 'forward' and right != 'left':  # we don't want to override right == 'forward or 'left'
                     right = other_heading
             else:
@@ -275,7 +275,7 @@ class Environment(object):
         location = state['location']
         heading = state['heading']
         light = 'green' if (self.intersections[location].state and heading[1] != 0) or (
-        (not self.intersections[location].state) and heading[0] != 0) else 'red'
+            (not self.intersections[location].state) and heading[0] != 0) else 'red'
         inputs = self.sense(agent)
 
         # Assess whether the agent can move based on the action chosen.
@@ -348,9 +348,10 @@ class Environment(object):
             # Move the agent
             if action is not None:
                 location = (
-                (location[0] + heading[0] - self.bounds[0]) % (self.bounds[2] - self.bounds[0] + 1) + self.bounds[0],
-                (location[1] + heading[1] - self.bounds[1]) % (self.bounds[3] - self.bounds[1] + 1) + self.bounds[
-                    1])  # wrap-around
+                    (location[0] + heading[0] - self.bounds[0]) % (self.bounds[2] - self.bounds[0] + 1) + self.bounds[
+                        0],
+                    (location[1] + heading[1] - self.bounds[1]) % (self.bounds[3] - self.bounds[1] + 1) + self.bounds[
+                        1])  # wrap-around
                 state['location'] = location
                 state['heading'] = heading
         # Agent attempted invalid move

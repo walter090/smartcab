@@ -24,6 +24,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
+        self.k = 0
 
     def reset(self, destination=None, testing=False):
         """ The reset function is called at the beginning of each trial.
@@ -39,6 +40,12 @@ class LearningAgent(Agent):
         # Update epsilon using a decay function of your choice
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
+        self.k += 1
+        self.epsilon /= self.k
+
+        if testing:
+            self.epsilon = 0
+            self.alpha = 0
 
         return None
 
@@ -50,13 +57,13 @@ class LearningAgent(Agent):
         # Collect data about the environment
         waypoint = self.planner.next_waypoint()  # The next waypoint
         inputs = self.env.sense(self)  # Visual input - intersection light and traffic
-        deadline = self.env.get_deadline(self)  # Remaining deadline
+        # deadline = self.env.get_deadline(self)  # Remaining deadline
 
         ########### 
         ## TO DO ##
         ###########
         # Set 'state' as a tuple of relevant data for the agent        
-        state = None
+        state = (waypoint, inputs['light'], inputs['left'], inputs['oncoming'])
 
         return state
 
@@ -68,8 +75,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Calculate the maximum Q-value of all actions for a given state
-
-        maxQ = None
+        maxQ = max(self.Q[state].values())
 
         return maxQ
 
@@ -82,7 +88,12 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
-
+        if self.learning:
+            if state not in self.Q.keys():
+                stateQ = dict()
+                for action in self.valid_actions:
+                    stateQ[action] = 0.0
+                self.Q[state] = stateQ
         return
 
     def choose_action(self, state):
@@ -92,7 +103,6 @@ class LearningAgent(Agent):
         # Set the agent state and default action
         self.state = state
         self.next_waypoint = self.planner.next_waypoint()
-        action = None
 
         ########### 
         ## TO DO ##
@@ -102,6 +112,17 @@ class LearningAgent(Agent):
         # Otherwise, choose an action with the highest Q-value for the current state
         if not self.learning:
             action = self.valid_actions[random.randint(0, 3)]
+        else:
+            if random.random() < self.epsilon:
+                action = self.valid_actions[random.randint(0, 3)]
+            else:
+                maxQ = -1.0
+                max_action = None
+                for state_action, stateQ in self.Q[state]:
+                    if stateQ > maxQ:
+                        maxQ = stateQ
+                        max_action = state_action
+                action = max_action
 
         return action
 
@@ -115,6 +136,8 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
+        maxQ = self.get_maxQ(state)
+        self.Q[state][action] = (1 - self.alpha) * self.Q[state][action] + self.alpha * (reward + maxQ)
 
         return
 
@@ -219,7 +242,7 @@ if __name__ == '__main__':
     parser.add_argument('--tolerance', type=float, default=0.05)
     parser.add_argument('--n-test', dest='n_test', type=int, default=0)
 
-    parser.set_defaults(verbose=False, display=True, learning=False, deadline=False)
+    parser.set_defaults(verbose=False, display=True, learning=True, deadline=False)
 
     arguments = parser.parse_args()
     print arguments
