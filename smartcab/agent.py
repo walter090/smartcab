@@ -24,7 +24,7 @@ class LearningAgent(Agent):
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
-        self.k = 0
+        self.k = 0.0
 
     def reset(self, destination=None, testing=False):
         """ The reset function is called at the beginning of each trial.
@@ -41,7 +41,7 @@ class LearningAgent(Agent):
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
         self.k += 1
-        self.epsilon /= self.k
+        self.epsilon -= self.k * 0.05
 
         if testing:
             self.epsilon = 0
@@ -57,13 +57,13 @@ class LearningAgent(Agent):
         # Collect data about the environment
         waypoint = self.planner.next_waypoint()  # The next waypoint
         inputs = self.env.sense(self)  # Visual input - intersection light and traffic
-        # deadline = self.env.get_deadline(self)  # Remaining deadline
+        deadline = self.env.get_deadline(self)  # Remaining deadline
 
         ########### 
         ## TO DO ##
         ###########
         # Set 'state' as a tuple of relevant data for the agent        
-        state = (waypoint, inputs['light'], inputs['left'], inputs['oncoming'])
+        state = (waypoint, inputs['light'], inputs['oncoming'])
 
         return state
 
@@ -118,7 +118,7 @@ class LearningAgent(Agent):
             else:
                 maxQ = -1.0
                 max_action = None
-                for state_action, stateQ in self.Q[state]:
+                for state_action, stateQ in self.Q[state].iteritems():
                     if stateQ > maxQ:
                         maxQ = stateQ
                         max_action = state_action
