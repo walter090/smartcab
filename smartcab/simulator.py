@@ -123,7 +123,7 @@ class Simulator(object):
             self.log_writer = csv.DictWriter(self.log_file, fieldnames=self.log_fields)
             self.log_writer.writeheader()
 
-    def run(self, tolerance=0.05, n_test=0):
+    def run(self, tolerance=0.05, n_test=0, show_text=True):
         """ Run a simulation of the environment. 
 
         'tolerance' is the minimum epsilon necessary to begin testing (if enabled)
@@ -198,7 +198,9 @@ class Simulator(object):
                         self.last_updated = self.current_time
 
                     # Render text
-                    self.render_text(trial, testing)
+                    if show_text:
+                        print show_text
+                        self.render_text(trial, testing)
 
                     # Render GUI and sleep
                     if self.display:
@@ -228,7 +230,7 @@ class Simulator(object):
                 })
 
             # Trial finished
-            if self.env.success == True:
+            if self.env.success:
                 print "\nTrial Completed!"
                 print "Agent reached the destination."
             else:

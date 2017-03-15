@@ -1,5 +1,6 @@
 import random
 import math
+import decay
 from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
@@ -9,7 +10,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """
 
-    def __init__(self, env, learning=False, epsilon=1.0, alpha=0.5):
+    def __init__(self, env, learning=False, epsilon=1.0, alpha=0.5, decay_function='linear'):
         super(LearningAgent, self).__init__(env)  # Set the agent in the evironment
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -19,12 +20,13 @@ class LearningAgent(Agent):
         self.Q = dict()  # Create a Q-table which will be a dictionary of tuples
         self.epsilon = epsilon  # Random exploration factor
         self.alpha = alpha  # Learning factor
+        self.decay_function = decay_function  # decay function
 
         ###########
         ## TO DO ##
         ###########
         # Set any additional class parameters as needed
-        self.k = 0.0
+        self.t = 1
 
     def reset(self, destination=None, testing=False):
         """ The reset function is called at the beginning of each trial.
@@ -40,8 +42,16 @@ class LearningAgent(Agent):
         # Update epsilon using a decay function of your choice
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
-        self.k += 1
-        self.epsilon -= self.k * 0.05
+        option = {
+            'linear': decay.linear(self.epsilon, 0.005, self.t),
+            'exponential': decay.exponential(0.95, self.t - 1),
+            'quadratic': decay.quadratic(self.t),
+            'e_ex': decay.e_ex(0.05, self.t - 1),
+            'cosine': decay.cosine(0.01, self.t - 1),
+        }
+
+        self.epsilon = option[self.decay_function]
+        self.t += 1
 
         if testing:
             self.epsilon = 0
@@ -160,7 +170,7 @@ def run(args):
     Driving function for running the simulation.
     Press ESC to close the simulation, or [SPACE] to pause the simulation.
     """
-    print args.display
+    print args
 
     ##############
     # Create the environment
@@ -168,21 +178,24 @@ def run(args):
     #   verbose     - set to True to display additional output from the simulation
     #   num_dummies - discrete number of dummy agents in the environment, default is 100
     #   grid_size   - discrete number of intersections (columns, rows), default is (8, 6)
-    env = Environment(verbose=args.verbose, num_dummies=args.num_dummies, grid_size=args.grid_size)
+    env = Environment(verbose=args['verbose'], num_dummies=args['num_dummies'], grid_size=args['grid_size'])
 
     ##############
     # Create the driving agent
     # Flags:
-    #   learning   - set to True to force the driving agent to use Q-learning
-    #    * epsilon - continuous value for the exploration factor, default is 1
-    #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent, learning=args.learning, epsilon=args.epsilon, alpha=args.alpha)
+    #   learning          - set to True to force the driving agent to use Q-learning
+    #    * epsilon        - continuous value for the exploration factor, default is 1
+    #    * alpha          - continuous value for the learning rate, default is 0.5
+    #    * decay_function - decay function for epsilon: 'linear', 'quadratic', 'exponential', 'e_ex', 'cosine'
+    agent = env.create_agent(LearningAgent, learning=args['learning'],
+                             epsilon=args['epsilon'], alpha=args['alpha'],
+                             decay_function=args['decay_function'])
 
     ##############
     # Follow the driving agent
     # Flags:
     #   enforce_deadline - set to True to enforce a deadline metric
-    env.set_primary_agent(agent, enforce_deadline=args.deadline)
+    env.set_primary_agent(agent, enforce_deadline=args['deadline'])
 
     ##############
     # Create the simulation
@@ -191,15 +204,16 @@ def run(args):
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, display=args.display, update_delay=args.update_delay,
-                    log_metrics=args.log_metrics, optimized=args.optimized)
+    sim = Simulator(env, display=args['display'], update_delay=args['update_delay'],
+                    log_metrics=args['log_metrics'], optimized=args['optimized'])
 
     ##############
     # Run the simulator
     # Flags:
-    #   tolerance  - epsilon tolerance before beginning testing, default is 0.05 
+    #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(tolerance=args.tolerance, n_test=args.n_test)
+    #   show_text  - set to True to show status on terminal ## added
+    sim.run(tolerance=args['tolerance'], n_test=args['n_test'], show_text=args['show_text'])
 
 
 if __name__ == '__main__':
@@ -220,6 +234,7 @@ if __name__ == '__main__':
     learning_parser.add_argument('--no-learning', dest='learning', action='store_false')
     parser.add_argument('--epsilon', type=float, default=1)
     parser.add_argument('--alpha', type=float, default=0.5)
+    parser.add_argument('--decay-function', dest='decay_function', default='linear')  # added argument
 
     # set_primary_target() flag
     deadline_parser = parser.add_mutually_exclusive_group()
@@ -241,10 +256,12 @@ if __name__ == '__main__':
     # Simulator run() flags
     parser.add_argument('--tolerance', type=float, default=0.05)
     parser.add_argument('--n-test', dest='n_test', type=int, default=0)
+    text_parser = parser.add_mutually_exclusive_group()
+    text_parser.add_argument('--text', dest='show_text', action='store_true')
+    text_parser.add_argument('--no-text', dest='show_text', action='store_true')
 
-    parser.set_defaults(verbose=False, display=True, learning=True, deadline=False)
+    parser.set_defaults(verbose=False, display=True, learning=True, deadline=False, show_text=True)
 
-    arguments = parser.parse_args()
-    print arguments
+    arguments = parser.parse_args().__dict__
 
     run(arguments)
