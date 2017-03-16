@@ -67,7 +67,7 @@ class LearningAgent(Agent):
         # Collect data about the environment
         waypoint = self.planner.next_waypoint()  # The next waypoint
         inputs = self.env.sense(self)  # Visual input - intersection light and traffic
-        deadline = self.env.get_deadline(self)  # Remaining deadline
+        # deadline = self.env.get_deadline(self)  # Remaining deadline
 
         ########### 
         ## TO DO ##
@@ -160,7 +160,8 @@ class LearningAgent(Agent):
         self.createQ(state)  # Create 'state' in Q-table
         action = self.choose_action(state)  # Choose an action
         reward = self.env.act(self, action)  # Receive a reward
-        self.learn(state, action, reward)  # Q-learn
+        if self.learning:
+            self.learn(state, action, reward)  # Q-learn
 
         return
 
@@ -213,7 +214,7 @@ def run(args):
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
     #   show_text  - set to True to show status on terminal ## added
-    sim.run(tolerance=args['tolerance'], n_test=args['n_test'], show_text=args['show_text'])
+    sim.run(tolerance=args['tolerance'], n_test=args['n_test'])
 
 
 if __name__ == '__main__':
@@ -260,7 +261,7 @@ if __name__ == '__main__':
     text_parser.add_argument('--text', dest='show_text', action='store_true')
     text_parser.add_argument('--no-text', dest='show_text', action='store_true')
 
-    parser.set_defaults(verbose=False, display=True, learning=True, deadline=False, show_text=True)
+    parser.set_defaults(verbose=False, display=True, learning=False, deadline=False, show_text=True)
 
     arguments = parser.parse_args().__dict__
 
