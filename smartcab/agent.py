@@ -10,7 +10,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """
 
-    def __init__(self, env, learning=False, epsilon=1.0, alpha=0.5, decay_function='linear'):
+    def __init__(self, env, decay_function, learning=False, epsilon=1.0, alpha=0.5):
         super(LearningAgent, self).__init__(env)  # Set the agent in the evironment
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -126,13 +126,22 @@ class LearningAgent(Agent):
             if random.random() < self.epsilon:
                 action = self.valid_actions[random.randint(0, 3)]
             else:
+                maxs = []
                 maxQ = -1.0
                 max_action = None
                 for state_action, stateQ in self.Q[state].iteritems():
                     if stateQ > maxQ:
                         maxQ = stateQ
                         max_action = state_action
-                action = max_action
+                        del maxs[:]
+                        maxs.append(max_action)
+                    elif stateQ == maxQ:
+                        maxs.append(state_action)
+
+                if len(maxs) > 1:
+                    action = maxs[random.randint(0, len(maxs)-1)]
+                else:
+                    action = max_action
 
         return action
 
@@ -146,8 +155,9 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
-        maxQ = self.get_maxQ(state)
-        self.Q[state][action] = (1 - self.alpha) * self.Q[state][action] + self.alpha * (reward + maxQ)
+        if self.learning:
+            maxQ = self.get_maxQ(state)
+            self.Q[state][action] = (1 - self.alpha) * self.Q[state][action] + self.alpha * (reward + maxQ)
 
         return
 

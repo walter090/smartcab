@@ -13873,7 +13873,7 @@ from smartcab import agent</p>
 </li>
 <li><p>The driving agent is rewarded a positive reward if the right action is taken, and negative reward if a wrong action is taken.</p>
 </li>
-<li><p>The driving agent recieves positive rewards if it does not move when it shouldn't - stay still during a red light; the driving agent recieves negative rewards (penalties) when it does not move while it should - does not move during a green light and the road is clear.</p>
+<li><p>The driving agent recieves positive rewards if it does not move when it shouldn't - stay still during a red light; the driving agent recieves negative rewards (penalties) when it does not move while it should - does not move during a green light and the road is clear. When the smartcab move correctly during a green light, it recieves a positive reward; for example, the smartcab move forward during a green light.</p>
 </li>
 </ul>
 
@@ -15168,7 +15168,7 @@ AABJRU5ErkJggg==
 <ul>
 <li><em>light</em> color of the traffic light is essential to the driving agent's learning, agent needs this information to decide to move or stay put.</li>
 <li><em>oncoming</em> The agent cannot make the decision based on traffic light along. For example, the agent need information about oncoming traffic when the light is green and waypoint is left.</li>
-<li><em>right</em>, <em>left</em> assuming other cars does not make any violations and that you cannot turn right at a red light, this feature is not necessary.</li>
+<li><em>right</em>, <em>left</em> assuming other cars does not make any violations and that you cannot turn right at a red light, this feature is not necessary. If all parties follow traffic rules, when the smartcab encounters a green light at an intersection, it should not have any chance of having a collision with traffic from left or right; therefore, the <em>right</em> and <em>left</em> features are not necessary.</li>
 </ul>
 </li>
 <li><p><em>deadline</em> does not affect the agents learning, it should not be used as a feature.</p>
@@ -15209,7 +15209,7 @@ AABJRU5ErkJggg==
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Answer:</strong></p>
 <p>[waypoint, light, oncoming]</p>
-<p>Size of the state space is 4. There are three cases for waypoint, two cases for light, three cases for oncoming, the number of total possible states is 18; a reasonable number of trials could reach possible state.</p>
+<p>Size of the state space is 4. There are three cases for waypoint, two cases for light, four cases for oncoming, the number of total possible states is 24; a reasonable number of trials could reach possible state.</p>
 
 </div>
 </div>
@@ -18540,10 +18540,7 @@ In this example, the action with the highest reward is forward, when the traffic
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>Answer:</strong></p>
-<ul>
-<li>Finite horizon. The simulation must stop when the time runs out.</li>
-<li>The smartcab does not only recieve positive rewards.</li>
-</ul>
+<p>The discount factor exists to discount rewards in future states; in this case, the driving agent has no knowledge beyond the state it is currently in, and the environment changes randomly, the agent cannot predict future states.</p>
 
 </div>
 </div>
